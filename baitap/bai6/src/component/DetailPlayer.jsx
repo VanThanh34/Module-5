@@ -1,89 +1,169 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { searchById } from '../service/player';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+import { searchById, edit } from '../service/player'; // Nhớ import hàm edit
+import { getAllPosition } from "../service/position.jsx"; // Lấy danh sách vị trí để đổ vào select
+import { toast } from "react-toastify";
 
 const DetailPlayer = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [player, setPlayer] = useState(null);
 
+    const [player, setPlayer] = useState({
+        // Khởi tạo giá trị rỗng để tránh lỗi uncontrolled input
+        code: '', name: '', dob: '', price: '', position: ''
+    });
+
+    const [positionList, setPositionList] = useState([]);
+
+    // 1. Lấy dữ liệu Cầu thủ + Danh sách vị trí khi trang vừa mở
     useEffect(() => {
-        // Tạo hàm async để gọi API
-        const fetchDetail = async () => {
+        const loadData = async () => {
             try {
-                const foundPlayer = await searchById(id); // Thêm await
-                setPlayer(foundPlayer);
-            } catch (error) {
-                // Nếu lỗi hoặc không tìm thấy
-                alert("Không tìm thấy cầu thủ này!");
-                navigate('/');
+                // Gọi song song cả 2 API cho nhanh
+                const [playerData, positionsData] = await Promise.all([
+                    searchById(id),
+                    getAllPosition()
+                ]);
+
+                if (playerData) {
+                    // Xử lý position: API trả về Object -> Convert sang String JSON để khớp với <option>
+                    const formattedPlayer = {
+                        ...playerData,
+                        position: JSON.stringify(playerData.position)
+                    };
+                    setPlayer(formattedPlayer);
+                    setPositionList(positionsData);
+                } else {
+                    alert("Không tìm thấy cầu thủ!");
+                    navigate('/');
+                }
+            } catch (err) {
+                console.error(err);
             }
         };
-
-        fetchDetail();
+        loadData();
     }, [id, navigate]);
 
-    if (!player) return <div className="text-center mt-5 text-primary">Loading...</div>;
+    // 2. Validate (Giống hệt bên AddPlayer)
+    const validationSchema = Yup.object({
+        code: Yup.string().required("Mã không được để trống").matches(/^MCT-\d{3}$/, "Mã sai định dạng"),
+        name: Yup.string().required("Tên không được để trống").min(3, "Tên quá ngắn"),
+        dob: Yup.date().required("Ngày sinh là bắt buộc"),
+        price: Yup.number().required("Giá phải nhập").min(1, "Giá phải > 0"),
+        position: Yup.string().required("Vui lòng chọn vị trí")
+    });
+
+    // 3. Xử lý Submit (Lưu thay đổi)
+    const handleSubmit = async (values) => {
+        try {
+            const playerToUpdate = {
+                ...values,
+                id: +id, // Đảm bảo ID là số
+                price: +values.price,
+                position: JSON.parse(values.position) // Parse lại thành Object trước khi gửi đi
+            };
+
+            const isSuccess = await edit(playerToUpdate);
+
+            if (isSuccess) {
+                toast.success("Cập nhật thành công!");
+                navigate('/');
+            } else {
+                toast.error("Cập nhật thất bại!");
+            }
+        } catch (e) {
+            toast.error("Lỗi hệ thống!");
+        }
+    };
 
     return (
         <div className="container mt-5">
             <div className="card shadow-lg border-0" style={{ maxWidth: "800px", margin: "0 auto" }}>
-                <div className="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <div className="card-header bg-warning text-white d-flex justify-content-between align-items-center">
                     <h4 className="mb-0">
-                        <i className="fa-solid fa-address-card me-2"></i>
-                        Hồ sơ cầu thủ: {player.name}
+                        <i className="fa-solid fa-pen-to-square me-2"></i>
+                        Hồ sơ cầu thủ
                     </h4>
-                    <Link to="/" className="btn btn-sm btn-light text-info fw-bold">
+                    <Link to="/" className="btn btn-sm btn-light text-dark fw-bold">
                         <i className="fa-solid fa-arrow-left me-1"></i> Quay lại
                     </Link>
                 </div>
 
-                <div className="card-body p-5">
-                    <div className="row g-4 align-items-center">
-                        <div className="col-md-4 text-center">
-                            <div className="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm"
-                                 style={{ width: '180px', height: '180px' }}>
-                                <i className="fa-solid fa-user fa-6x text-secondary"></i>
+                <div className="card-body p-4">
+                    {/* QUAN TRỌNG: enableReinitialize={true} giúp Formik nhận data mới từ API */}
+                    <Formik
+                        initialValues={player}
+                        enableReinitialize={true}
+                        validationSchema={validationSchema}
+                        onSubmit={handleSubmit}
+                    >
+                        <Form>
+                            <div className="row g-3">
+                                {/* Cột Trái: Ảnh đại diện (Trang trí) */}
+                                <div className="col-md-4 text-center">
+                                    <div className="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm mb-3"
+                                         style={{ width: '150px', height: '150px' }}>
+                                        <i className="fa-solid fa-user-pen fa-5x text-secondary"></i>
+                                    </div>
+                                    <div className="alert alert-info py-2 small">
+                                        Đang chỉnh sửa ID: <strong>{id}</strong>
+                                    </div>
+                                </div>
+
+                                {/* Cột Phải: Các ô Input */}
+                                <div className="col-md-8">
+                                    <div className="mb-3">
+                                        <label className="form-label fw-bold">Mã cầu thủ</label>
+                                        <Field name="code" className="form-control" />
+                                        <ErrorMessage name="code" component="div" className="text-danger small" />
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label fw-bold">Họ và tên</label>
+                                        <Field name="name" className="form-control" />
+                                        <ErrorMessage name="name" component="div" className="text-danger small" />
+                                    </div>
+
+                                    <div className="row">
+                                        <div className="col-md-6 mb-3">
+                                            <label className="form-label fw-bold">Ngày sinh</label>
+                                            <Field name="dob" type="date" className="form-control" />
+                                            <ErrorMessage name="dob" component="div" className="text-danger small" />
+                                        </div>
+                                        <div className="col-md-6 mb-3">
+                                            <label className="form-label fw-bold">Vị trí</label>
+                                            <Field as="select" name="position" className="form-select">
+                                                <option value="">-- Chọn vị trí --</option>
+                                                {positionList.map(pos => (
+                                                    <option key={pos.id} value={JSON.stringify(pos)}>
+                                                        {pos.label}
+                                                    </option>
+                                                ))}
+                                            </Field>
+                                            <ErrorMessage name="position" component="div" className="text-danger small" />
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label fw-bold">Giá chuyển nhượng ($)</label>
+                                        <Field name="price" type="number" className="form-control" />
+                                        <ErrorMessage name="price" component="div" className="text-danger small" />
+                                    </div>
+                                </div>
                             </div>
-                            <h3 className="mt-3 text-primary fw-bold">{player.code}</h3>
-                        </div>
 
-                        <div className="col-md-8">
-                            <ul className="list-group list-group-flush">
-                                <li className="list-group-item d-flex justify-content-between align-items-center py-3">
-                                    <span className="fw-bold text-muted">Họ và tên:</span>
-                                    <span className="fs-5">{player.name}</span>
-                                </li>
-                                <li className="list-group-item d-flex justify-content-between align-items-center py-3">
-                                    <span className="fw-bold text-muted">Ngày sinh:</span>
-                                    <span className="fs-5">{player.dob}</span>
-                                </li>
-                                <li className="list-group-item d-flex justify-content-between align-items-center py-3">
-                                    <span className="fw-bold text-muted">Vị trí thi đấu:</span>
-                                    {/* SỬA LỖI Ở ĐÂY: Lấy .label */}
-                                    <span className={`badge fs-6 ${
-                                        (player.position?.value || player.position) === 'ST' ? 'bg-danger' :
-                                            (player.position?.value || player.position) === 'GK' ? 'bg-warning text-dark' : 'bg-success'
-                                    }`}>
-                                        {player.position?.label || player.position}
-                                    </span>
-                                </li>
-                                <li className="list-group-item d-flex justify-content-between align-items-center py-3">
-                                    <span className="fw-bold text-muted">Giá chuyển nhượng:</span>
-                                    {/* Thêm check null cho price */}
-                                    <span className="fs-4 text-success fw-bold">
-                                        {player.price?.toLocaleString()} $
-                                    </span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+                            <hr />
 
-                <div className="card-footer bg-light text-end p-3">
-                    <button className="btn btn-warning me-2">
-                        <i className="fa-solid fa-pen-to-square me-1"></i> Chỉnh sửa
-                    </button>
+                            <div className="text-end">
+                                <Link to="/" className="btn btn-secondary me-2">Hủy bỏ</Link>
+                                <button type="submit" className="btn btn-warning fw-bold px-4">
+                                    <i className="fa-solid fa-check me-2"></i> Hoàn tất & Lưu
+                                </button>
+                            </div>
+                        </Form>
+                    </Formik>
                 </div>
             </div>
         </div>

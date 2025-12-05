@@ -19,9 +19,9 @@
       "dob": "1996",
       "price": 10000,
       "position": {
-        "id": 4,
-        "value": "ST",
-        "label": "Tiền đạo (ST)"
+        "id": 3,
+        "value": "MF",
+        "label": "Tiền vệ (MF)"
       }
     },
     {
@@ -50,18 +50,6 @@
     },
     {
       "id": 124,
-      "code": "MCT-012",
-      "name": "Văn Thành",
-      "dob": "2002-12-12",
-      "price": 10000000,
-      "position": {
-        "id": 3,
-        "value": "MF",
-        "label": "Tiền vệ (MF)"
-      }
-    },
-    {
-      "id": 125,
       "code": "MCT-012",
       "name": "Văn Thành",
       "dob": "2002-12-12",

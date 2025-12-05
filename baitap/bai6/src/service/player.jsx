@@ -68,6 +68,15 @@ export async function deleteById(id) {
     }
     return false;
 }
+export async function edit(player) {
+    try {
+        const response = await axios.patch(`${URL_BE}/players/${player.id}`, player);
+        return response.status === 200;
+    } catch (e) {
+        console.log(e.message);
+    }
+    return false;
+}
 
 export async function add(player) {
     try {
