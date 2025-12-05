@@ -1,0 +1,98 @@
+{
+  "players": [
+    {
+      "id": 1,
+      "code": "MCT-001",
+      "name": "Thành Bean",
+      "dob": "2002",
+      "price": 13000000,
+      "position": {
+        "id": 1,
+        "value": "GK",
+        "label": "Thủ môn (GK)"
+      }
+    },
+    {
+      "id": 2,
+      "code": "MCT-002",
+      "name": "Thành Container",
+      "dob": "1996",
+      "price": 10000,
+      "position": {
+        "id": 4,
+        "value": "ST",
+        "label": "Tiền đạo (ST)"
+      }
+    },
+    {
+      "id": 3,
+      "code": "MCT-003",
+      "name": "Tâm nem chua",
+      "dob": "2004",
+      "price": 5000,
+      "position": {
+        "id": 4,
+        "value": "ST",
+        "label": "Tiền đạo (ST)"
+      }
+    },
+    {
+      "id": 12,
+      "code": "MCT-012",
+      "name": "Văn Thành",
+      "dob": "2002-12-12",
+      "price": 10000000,
+      "position": {
+        "id": 1,
+        "value": "GK",
+        "label": "Thủ môn (GK)"
+      }
+    },
+    {
+      "id": 124,
+      "code": "MCT-012",
+      "name": "Văn Thành",
+      "dob": "2002-12-12",
+      "price": 10000000,
+      "position": {
+        "id": 3,
+        "value": "MF",
+        "label": "Tiền vệ (MF)"
+      }
+    },
+    {
+      "id": 125,
+      "code": "MCT-012",
+      "name": "Văn Thành",
+      "dob": "2002-12-12",
+      "price": 10000000,
+      "position": {
+        "id": 3,
+        "value": "MF",
+        "label": "Tiền vệ (MF)"
+      }
+    }
+  ],
+  "positions": [
+    {
+      "id": 1,
+      "value": "GK",
+      "label": "Thủ môn (GK)"
+    },
+    {
+      "id": 2,
+      "value": "DF",
+      "label": "Hậu vệ (DF)"
+    },
+    {
+      "id": 3,
+      "value": "MF",
+      "label": "Tiền vệ (MF)"
+    },
+    {
+      "id": 4,
+      "value": "ST",
+      "label": "Tiền đạo (ST)"
+    }
+  ]
+}
